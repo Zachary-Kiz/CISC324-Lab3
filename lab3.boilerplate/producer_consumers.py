@@ -39,12 +39,11 @@ class SharedBuffer:
     '''
 
     def read_message(self):
-        message = None
         # TODO: wait if buffer is empty
         self.notEmpty.acquire()
         with self.mutex:
             # TODO: if production is done and buffer is empty, return None (check the buffer length)
-            if len(self.buffer) == 0 and self.doneProducing == True:
+            if self.doneProducing and len(self.buffer) == 0:
                 # TODO: release the requried semaphore to avoid deadlock
                 self.notFull.release()
                 # Return None if production is done and buffer is empty
@@ -66,8 +65,10 @@ class SharedBuffer:
             self.doneProducing = True
             # Release semaphore to ensure all consumers can exit
             # TODO: release the semaphore for each consumer (you may need to release it multiple times)
-            pass  # Remove this line when you implement the method
-
+            for _ in range(len(self.buffer)):  # Ensure you release the semaphore for the existing messages
+                self.notEmpty.release()
+          
+        
     def check_done_producing(self):
         with self.mutex:
             return self.doneProducing and len(self.buffer) == 0
@@ -104,7 +105,7 @@ def consumer(thread_id):
         message = buffer.read_message()
         if message is None:
             # TODO: break the loop if production is done and buffer is empty
-            pass  # Remove this line when you implement the method
+            break  # Remove this line when you implement the method
         print(f"Consumer {thread_id} consumed: {message}")
         time.sleep(1)  # Simulate reading time
 
