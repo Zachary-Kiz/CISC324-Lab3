@@ -43,7 +43,7 @@ class SharedBuffer:
         self.notEmpty.acquire()
         with self.mutex:
             # TODO: if production is done and buffer is empty, return None (check the buffer length)
-            if self.doneProducing and len(self.buffer) == 0:
+            if len(self.buffer) == 0 and self.doneProducing:
                 # TODO: release the requried semaphore to avoid deadlock
                 self.notFull.release()
                 # Return None if production is done and buffer is empty
@@ -65,7 +65,7 @@ class SharedBuffer:
             self.doneProducing = True
             # Release semaphore to ensure all consumers can exit
             # TODO: release the semaphore for each consumer (you may need to release it multiple times)
-            for _ in range(len(self.buffer)):  # Ensure you release the semaphore for the existing messages
+            for _ in range(len(threading.enumerate()) - 1):  
                 self.notEmpty.release()
           
         
